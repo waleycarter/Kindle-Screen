@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle Dashboard Ultra</title>
+    <title>Kindle E-Ink Dashboard V4</title>
     <meta http-equiv="refresh" content="600"> <style>
         body {
             background-color: #ffffff;
@@ -28,13 +28,16 @@
         .weather-box { 
             width: 60%;
             height: 100%;
+            display: flex;
+            align-items: center;
         }
-        /* 直接嵌入天气小部件图片，干掉所有可能被拦截的 JS 请求 */
-        .weather-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            overflow: hidden;
+        /* 纯英文国际图片流，彻底绝交乱码 */
+        .weather-img {
+            max-height: 90%;
+            max-width: 100%;
+            object-fit: contain;
+            /* 强制转换为墨水屏高对比度黑白 */
+            filter: grayscale(100%) contrast(140%);
         }
         .time-box { 
             width: 35%;
@@ -94,7 +97,7 @@
 
     <div class="header-section">
         <div class="weather-box">
-            <iframe class="weather-iframe" src="https://i.tianqi.com/?c=code&id=1&py=shanghai&icon=1&wind=0&num=1&site=12"></iframe>
+            <img class="weather-img" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather">
         </div>
         <div class="time-box" id="live-clock">--:--:--</div>
     </div>
@@ -103,14 +106,14 @@
         <div class="btn-group">
             <button class="coin-btn active" onclick="switchAsset('BINANCE:BTCUSDT', this)">BTC</button>
             <button class="coin-btn" onclick="switchAsset('BINANCE:ETHUSDT', this)">ETH</button>
-            <button class="coin-btn" onclick="switchAsset('CME:NQ1!', this)">NASDAQ</button>
+            <button class="coin-btn" onclick="switchAsset('CAPITALCOM:US100', this)">NASDAQ</button>
         </div>
         <div class="btn-group">
             <button class="tf-btn" onclick="switchTimeframe('15', this)">15m</button>
             <button class="tf-btn active" onclick="switchTimeframe('60', this)">1h</button>
             <button class="tf-btn" onclick="switchTimeframe('240', this)">4h</button>
-            <button class="tf-btn" onclick="switchTimeframe('D', this)">日K</button>
-            <button class="tf-btn" onclick="switchTimeframe('W', this)">周K</button>
+            <button class="tf-btn" onclick="switchTimeframe('D', this)">Daily</button>
+            <button class="tf-btn" onclick="switchTimeframe('W', this)">Weekly</button>
         </div>
     </div>
 
@@ -125,7 +128,7 @@
         function updateIframeSrc() {
             var iframe = document.getElementById('tv-iframe');
             if (iframe) {
-                // 更换为更底层的通用型嵌入地址
+                // 使用最基础的嵌入参数，避免触发 TradingView 的高级验证
                 var targetUrl = "https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=" + currentSymbol + "&interval=" + currentInterval + "&theme=light&style=1&timezone=Asia%2FShanghai";
                 iframe.src = targetUrl;
             }
@@ -156,12 +159,11 @@
             var hours = now.getHours();
             var minutes = now.getMinutes();
             var seconds = now.getSeconds();
-            // 手动补零，防止古老内核对 toLocaleTimeString 产生支持差异
             if (hours < 10) hours = "0" + hours;
             if (minutes < 10) minutes = "0" + minutes;
             if (seconds < 10) seconds = "0" + seconds;
             
-            document.getElementById('live-clock').innerHTML = "上海时间<br>" + hours + ":" + minutes + ":" + seconds;
+            document.getElementById('live-clock').innerHTML = "SHANGHAI<br>" + hours + ":" + minutes + ":" + seconds;
         }
 
         window.onload = function() {
