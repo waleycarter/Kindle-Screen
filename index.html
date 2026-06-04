@@ -1,144 +1,87 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto K-Line Dashboard</title>
-    <meta http-equiv="refresh" content="300"> 
+    <title>Kindle Matrix Box Pure Image</title>
+    <meta http-equiv="refresh" content="60"> 
     <style>
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: #ffffff;
             color: #000000;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 95vh;
+            font-family: Arial, sans-serif;
             overflow: hidden;
         }
-        /* 顶部币种切换栏：按钮做大，方便Kindle墨水屏点击 */
-        .crypto-tabs {
-            display: flex;
+
+        /* 绝对兼容的表格四宫格布局 */
+        table {
             width: 100%;
-            justify-content: space-around;
-            margin-bottom: 5px;
+            height: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
-        .tab-btn {
-            background-color: #ffffff;
-            border: 2px solid #000000;
-            color: #000000;
-            padding: 8px 16px;
-            font-size: 18px;
+
+        td {
+            border: 4px solid #000000; /* 加粗边框，适合墨水屏 */
+            text-align: center;        /* 水平完美居中 */
+            vertical-align: middle;    /* 垂直完美居中 */
+            padding: 10px;
+            height: 50%;
+            width: 50%;
+        }
+
+        .title {
+            font-size: 22px;
             font-weight: bold;
-            cursor: pointer;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
         }
-        .tab-btn.active {
-            background-color: #000000;
-            color: #ffffff;
-        }
-        /* K线图区域 */
-        .chart-container {
-            width: 98%;
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ccc;
-            background-color: #fff;
-        }
-        .chart-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            /* 墨水屏特殊滤镜：去除彩色，强行转为高对比度黑白，让K线更清晰 */
-            filter: grayscale(100%) contrast(150%);
-        }
-        /* 底部时间周期切换栏 */
-        .time-tabs {
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-            margin-top: 5px;
-        }
-        .time-btn {
-            background-color: #ffffff;
-            border: 1px solid #000000;
-            padding: 6px 10px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .time-btn.active {
-            background-color: #000000;
-            color: #ffffff;
+
+        /* 统一缩放控制，让四个模块内的行情图片整体放大一倍居中显示 */
+        .content-pic {
+            max-width: 95%;
+            max-height: 80%; /* 极大化利用格子空间 */
+            display: inline-block;
+            vertical-align: middle;
+            /* 墨水屏高对比度优化：去掉杂色，让文字、曲线和数字黑白分明 */
+            filter: grayscale(100%) contrast(160%) brightness(95%);
         }
     </style>
 </head>
 <body>
 
-    <div class="crypto-tabs">
-        <button class="tab-btn active" onclick="changeCoin('BTCUSDT')">BTC</button>
-        <button class="tab-btn" onclick="changeCoin('ETHUSDT')">ETH</button>
-        <button class="tab-btn" onclick="changeCoin('SOLUSDT')">SOL</button>
-    </div>
-
-    <div class="chart-container">
-        <img id="kline-chart" class="chart-img" src="" alt="K线图加载中...">
-    </div>
-
-    <div class="time-tabs">
-        <button class="time-btn" onclick="changeInterval('15')">15m</button>
-        <button class="time-btn active" onclick="changeInterval('60')">1h</button>
-        <button class="time-btn" onclick="changeInterval('240')">4h</button>
-        <button class="time-btn" onclick="changeInterval('D')">日K</button>
-        <button class="time-btn" onclick="changeInterval('W')">周K</button>
-    </div>
-
-    <script>
-        // 默认配置
-        let currentCoin = 'BINANCE:BTCUSDT';
-        let currentInterval = '60'; // 默认1小时
-
-        function updateChart() {
-            const chartImg = document.getElementById('kline-chart');
-            // 时间戳，防止浏览器缓存图片不更新
-            const timestamp = new Date().getTime(); 
+    <table>
+        <tr>
+            <td>
+                <div class="title">📍 SHANGHAI</div>
+                <img class="content-pic" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather">
+            </td>
             
-            // 构建 TradingView 官方的静态图表生成接口 URL
-            // theme=light(明亮模式), style=1(烛线图), width/height适配Kindle
-            const imageUrl = `https://s3.tradingview.com/snapshots/${currentCoin.split(':')[1].toLowerCase()}/${currentCoin.split(':')[1].toLowerCase()}_${currentInterval}.png?${timestamp}`;
+            <td>
+                <div class="title">🪙 BTC / USDT</div>
+                <img class="content-pic" src="https://s3.tradingview.com/mini-charts/side/BINANCE-BTCUSDT.svg" alt="BTC Price">
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                <div class="title">📈 NASDAQ 100</div>
+                <img class="content-pic" src="https://s3.tradingview.com/mini-charts/side/CURRENCYCOM-US100.svg" alt="NASDAQ Price">
+            </td>
             
-            // 备用高稳定性接口（如果上面官方接口国内部分地区打不开，可以用这个标准轻量图）
-            const fallbackUrl = `https://charts.tradingview.com/charts/v1/embed.html?symbol=${currentCoin}&interval=${currentInterval}&theme=light&style=1`;
-            
-            // 直接利用高级轻量图表源
-            chartImg.src = `https://image.thum.io/get/width/750/crop/600/maxAge/120/https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${currentCoin}&interval=${currentInterval}&theme=light&style=1`;
-        }
+            <td>
+                <div class="title">💵 USD / CNY</div>
+                <img class="content-pic" src="https://s3.tradingview.com/mini-charts/side/FX_IDC-USDCNY.svg" alt="USDCNY Price">
+            </td>
+        </tr>
+    </table>
 
-        function changeCoin(coin) {
-            currentCoin = 'BINANCE:' + coin;
-            // 更新按钮样式
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
-        }
-
-        function changeInterval(interval) {
-            currentInterval = interval;
-            // 更新按钮样式
-            const buttons = document.querySelectorAll('.time-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
-        }
-
-        // 初始化加载
-        updateChart();
-        // 每隔 60 秒自动刷新一次当前K线图
-        setInterval(updateChart, 60000);
-    </script>
 </body>
 </html>
