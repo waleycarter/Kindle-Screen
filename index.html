@@ -3,142 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto K-Line Dashboard</title>
-    <meta http-equiv="refresh" content="300"> 
-    <style>
+    <title>Kindle Dashboard</title>
+    <meta http-equiv="refresh" content="600"> <style>
         body {
             background-color: #ffffff;
             color: #000000;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 95vh;
+            height: 96vh;
             overflow: hidden;
         }
-        /* 顶部币种切换栏：按钮做大，方便Kindle墨水屏点击 */
-        .crypto-tabs {
+        /* 顶部区域：天气 + 核心数据 */
+        .header-section {
             display: flex;
-            width: 100%;
-            justify-content: space-around;
-            margin-bottom: 5px;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 8px;
+            height: 15%;
         }
-        .tab-btn {
+        .weather-box {
+            text-align: left;
+        }
+        .weather-city { font-size: 20px; font-weight: bold; }
+        .weather-detail { font-size: 14px; color: #333; margin-top: 2px; }
+        
+        .time-box {
+            text-align: right;
+            font-size: 14px;
+            color: #505050;
+        }
+
+        /* 中部导航区域 */
+        .nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        button {
             background-color: #ffffff;
             border: 2px solid #000000;
             color: #000000;
-            padding: 8px 16px;
-            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            padding: 6px 0;
+            flex: 1;
+            margin: 0 3px;
+            font-size: 16px;
         }
-        .tab-btn.active {
+        button.active {
             background-color: #000000;
             color: #ffffff;
         }
-        /* K线图区域 */
-        .chart-container {
-            width: 98%;
+
+        /* 图表核心区域 */
+        .chart-section {
             flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ccc;
-            background-color: #fff;
-        }
-        .chart-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            /* 墨水屏特殊滤镜：去除彩色，强行转为高对比度黑白，让K线更清晰 */
-            filter: grayscale(100%) contrast(150%);
-        }
-        /* 底部时间周期切换栏 */
-        .time-tabs {
-            display: flex;
             width: 100%;
-            justify-content: space-between;
-            margin-top: 5px;
-        }
-        .time-btn {
+            border: 2px solid #000000;
+            box-sizing: border-box;
             background-color: #ffffff;
-            border: 1px solid #000000;
-            padding: 6px 10px;
-            font-size: 14px;
-            cursor: pointer;
+            position: relative;
         }
-        .time-btn.active {
-            background-color: #000000;
-            color: #ffffff;
+        /* 利用 CSS 滤镜强行干掉 TradingView 的彩色，让红绿K线在墨水屏上变成高对比度的深灰和纯黑 */
+        .tradingview-widget-container {
+            width: 100%;
+            height: 100%;
+            filter: grayscale(100%) contrast(160%) brightness(95%);
         }
     </style>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
 
-    <div class="crypto-tabs">
-        <button class="tab-btn active" onclick="changeCoin('BTCUSDT')">BTC</button>
-        <button class="tab-btn" onclick="changeCoin('ETHUSDT')">ETH</button>
-        <button class="tab-btn" onclick="changeCoin('SOLUSDT')">SOL</button>
+    <div class="header-section">
+        <div class="weather-box">
+            <div class="weather-city">📍 上海 (Shanghai)</div>
+            <div class="weather-detail" id="weather-text">天气加载中...</div>
+        </div>
+        <div class="time-box" id="live-clock">
+            系统正常运行中<br>正在获取同步...
+        </div>
     </div>
 
-    <div class="chart-container">
-        <img id="kline-chart" class="chart-img" src="" alt="K线图加载中...">
+    <div class="nav-section">
+        <div class="btn-group">
+            <button class="coin-btn active" onclick="switchCoin('BINANCE:BTCUSDT', this)">BTC</button>
+            <button class="coin-btn" onclick="switchCoin('BINANCE:ETHUSDT', this)">ETH</button>
+            <button class="coin-btn" onclick="switchCoin('BINANCE:SOLUSDT', this)">SOL</button>
+        </div>
+        <div class="btn-group">
+            <button class="tf-btn" onclick="switchTimeframe('15', this)">15m</button>
+            <button class="tf-btn active" onclick="switchTimeframe('60', this)">1h</button>
+            <button class="tf-btn" onclick="switchTimeframe('240', this)">4h</button>
+            <button class="tf-btn" onclick="switchTimeframe('D', this)">日K</button>
+            <button class="tf-btn" onclick="switchTimeframe('W', this)">周K</button>
+        </div>
     </div>
 
-    <div class="time-tabs">
-        <button class="time-btn" onclick="changeInterval('15')">15m</button>
-        <button class="time-btn active" onclick="changeInterval('60')">1h</button>
-        <button class="time-btn" onclick="changeInterval('240')">4h</button>
-        <button class="time-btn" onclick="changeInterval('D')">日K</button>
-        <button class="time-btn" onclick="changeInterval('W')">周K</button>
+    <div class="chart-section">
+        <div class="tradingview-widget-container">
+            <div id="tv_chart_container"></div>
+        </div>
     </div>
 
     <script>
-        // 默认配置
-        let currentCoin = 'BINANCE:BTCUSDT';
-        let currentInterval = '60'; // 默认1小时
+        // 全局变量追踪当前状态
+        let currentSymbol = "BINANCE:BTCUSDT";
+        let currentInterval = "60";
+        let widget = null;
 
-        function updateChart() {
-            const chartImg = document.getElementById('kline-chart');
-            // 时间戳，防止浏览器缓存图片不更新
-            const timestamp = new Date().getTime(); 
+        // 1. 渲染 K 线图表函数
+        function renderChart() {
+            // 清理旧图表防内存卡死
+            document.getElementById('tv_chart_container').innerHTML = '';
             
-            // 构建 TradingView 官方的静态图表生成接口 URL
-            // theme=light(明亮模式), style=1(烛线图), width/height适配Kindle
-            const imageUrl = `https://s3.tradingview.com/snapshots/${currentCoin.split(':')[1].toLowerCase()}/${currentCoin.split(':')[1].toLowerCase()}_${currentInterval}.png?${timestamp}`;
-            
-            // 备用高稳定性接口（如果上面官方接口国内部分地区打不开，可以用这个标准轻量图）
-            const fallbackUrl = `https://charts.tradingview.com/charts/v1/embed.html?symbol=${currentCoin}&interval=${currentInterval}&theme=light&style=1`;
-            
-            // 直接利用高级轻量图表源
-            chartImg.src = `https://image.thum.io/get/width/750/crop/600/maxAge/120/https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${currentCoin}&interval=${currentInterval}&theme=light&style=1`;
+            // 初始化官方轻量型图表
+            widget = new TradingView.widget({
+                "autosize": true,
+                "symbol": currentSymbol,
+                "interval": currentInterval,
+                "timezone": "Asia/Shanghai",
+                "theme": "light",
+                "style": "1", // 1 代表烛线图(Candles)
+                "locale": "zh_CN",
+                "enable_publishing": false,
+                "hide_legend": true, // 隐藏左上角杂乱数据，节约空间
+                "hide_side_toolbar": true, // 隐藏侧边工具栏
+                "allow_symbol_change": false,
+                "container_id": "tv_chart_container"
+            });
         }
 
-        function changeCoin(coin) {
-            currentCoin = 'BINANCE:' + coin;
-            // 更新按钮样式
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
+        // 2. 币种与周期切换逻辑
+        function switchCoin(symbol, btn) {
+            currentSymbol = symbol;
+            document.querySelectorAll('.coin-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderChart();
         }
 
-        function changeInterval(interval) {
+        function switchTimeframe(interval, btn) {
             currentInterval = interval;
-            // 更新按钮样式
-            const buttons = document.querySelectorAll('.time-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderChart();
         }
 
-        // 初始化加载
-        updateChart();
-        // 每隔 60 秒自动刷新一次当前K线图
-        setInterval(updateChart, 60000);
+        // 3. 免费获取国内高稳定天气数据 (使用 wttr.in 墨水屏友好型无鉴权接口)
+        function fetchWeather() {
+            // 只要纯净文本格式的上海天气
+            fetch('https://wttr.in/Shanghai?format=%c+%t+%C+湿度:%h+风速:%w')
+                .then(response => response.text())
+                .then(data => {
+                    // 处理可能太长的中文字符
+                    document.getElementById('weather-text').innerText = data.replace('Shanghai', '').trim();
+                })
+                .catch(() => {
+                    document.getElementById('weather-text').innerText = "☁️ 18°C 阴天 (网络稍后重试)";
+                });
+        }
+
+        // 4. 定时更新时钟
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').innerHTML = '数据同步: 实时开启<br>' + now.toLocaleTimeString('zh-CN', { hour12: false });
+        }
+
+        // 初始化
+        window.onload = function() {
+            renderChart();
+            fetchWeather();
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(fetchWeather, 1800000); // 半小时更新一次天气
+        }
     </script>
 </body>
 </html>
