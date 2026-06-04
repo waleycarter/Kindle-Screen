@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle 4-Grid Dashboard</title>
-    <meta http-equiv="refresh" content="600"> <!-- 10分钟整页强刷清除墨水屏残影 -->
-    <style>
-        /* 彻底清除全屏一切白边与外边距 */
+    <title>Kindle 4-Grid Centered Dashboard</title>
+    <meta http-equiv="refresh" content="600"> <style>
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,77 +14,62 @@
             background-color: #ffffff;
             color: #000000;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            padding: 12px;
+            padding: 10px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 98vh;
             overflow: hidden;
         }
 
-        /* 四宫格容器：两行两列，完美撑满屏幕 */
+        /* 核心四宫格容器 */
         .grid-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 两列对开 */
+            grid-template-rows: 1fr 1fr;    /* 两行对开 */
+            gap: 15px; /* 四个格子之间的舒适空隙 */
             width: 100%;
+            height: 100%;
         }
 
-        .grid-row {
-            display: flex;
-            justify-content: space-between;
-            height: 48%; /* 给中间留一点分隔空隙 */
-            width: 100%;
-        }
-
-        /* 单个模块基础样式 */
-        .grid-block {
-            width: 48%;
-            height: 100%;
+        /* 单个卡片格子：让所有内容在格子里绝对上下左右居中 */
+        .grid-card {
+            border: 2px solid #000000; /* 四宫格经典黑边框 */
+            background-color: #ffffff;
             display: flex;
             flex-direction: column;
+            align-items: center;    /* 水平居中 */
+            justify-content: center;  /* 垂直居中 */
+            padding: 10px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 左上角天气专属优化：通过强制高度让今日最高最低温顶入视线 */
+        .weather-wrapper {
+            width: 100%;
+            height: 85%;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            overflow: hidden;
+        }
+        .weather-img {
+            max-height: 130%; /* 稍微放大，把底部的未来几天裁掉，只留顶部今日最高低预报 */
+            max-width: 100%;
+            object-fit: contain;
+            /* 墨水屏高对比滤镜 */
+            filter: grayscale(100%) contrast(150%) brightness(95%);
         }
 
-        /* 靠左的模块（左上、左下）：文字绝对死贴左边缘 */
-        .align-left {
-            text-align: left;
-        }
-
-        /* 靠右的模块（右上、右下）：文字绝对死贴右边缘 */
-        .align-right {
-            text-align: right;
-        }
-
-        /* 统一大标签字号 */
-        .title-label {
-            font-size: 20px;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 6px;
-            letter-spacing: 1px;
-        }
-
-        /* 统一核心数字字号（Kindle上加粗超大显示） */
-        .value-display {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000000;
-            line-height: 1.3;
-        }
-        
-        /* 辅助小字（如最高最低温提示） */
-        .sub-info {
-            font-size: 14px;
-            color: #505050;
-            margin-top: 4px;
-        }
-
-        /* 分割线 */
-        .horizontal-divider {
-            border-bottom: 3px solid #000000;
-            width: 100%;
-            margin: 8px 0;
+        /* 右上、左下、右下角外链报价组件通用排版 */
+        .widget-iframe {
+            width: 95%;
+            height: 90%;
+            border: none;
+            /* 强行干掉彩色，确保数字在 Kindle 屏幕上清晰醒目 */
+            filter: grayscale(100%) contrast(160%) brightness(95%);
         }
     </style>
 </head>
@@ -94,132 +77,25 @@
 
     <div class="grid-container">
         
-        <!-- 【第一行：左天气 vs 右比特币】 -->
-        <div class="grid-row">
-            <!-- 左上角：上海天气（原生文字流，绝对贴边） -->
-            <div class="grid-block align-left">
-                <div class="title-label">📍 上海天气</div>
-                <div class="value-display" id="weather-condition">加载中...</div>
-                <div class="sub-info" id="weather-range">正在同步温区...</div>
-            </div>
-            
-            <!-- 右上角：比特币实时价格（纯数字，死贴右边） -->
-            <div class="grid-block align-right">
-                <div class="title-label">🪙 BTC / USDT</div>
-                <div class="value-display" id="btc-price">$--,---.--</div>
-                <div class="sub-info" id="btc-change">--%</div>
+        <div class="grid-card">
+            <div class="weather-wrapper">
+                <img class="weather-img" src="https://wttr.in/Shanghai_mC_lang=en.png" alt="Shanghai Weather Forecast">
             </div>
         </div>
+        
+        <div class="grid-card">
+            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=BINANCE%3ABTCUSDT&theme=light&locale=en"></iframe>
+        </div>
 
-        <!-- 居中横向分割线 -->
-        <div class="horizontal-divider"></div>
-
-        <!-- 【第二行：左纳指 vs 右汇率】 -->
-        <div class="grid-row">
-            <!-- 左下角：纳斯达克指数（原右上角模块平移至此，纯文字防拦截） -->
-            <div class="grid-block align-left">
-                <div class="title-label">📈 NASDAQ 100</div>
-                <div class="value-display" id="nasdaq-price">-----.--</div>
-                <div class="sub-info" id="nasdaq-change">--%</div>
-            </div>
-            
-            <!-- 右下角：人民币兑美元实时汇率 -->
-            <div class="grid-block align-right">
-                <div class="title-label">💵 USD / CNY</div>
-                <div class="value-display" id="usdcny-price">-.----</div>
-                <div class="sub-info" id="usdcny-update">同步中...</div>
-            </div>
+        <div class="grid-card">
+            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=CAPITALCOM%3AUS100&theme=light&locale=en"></iframe>
+        </div>
+        
+        <div class="grid-card">
+            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=FX_IDC%3AUSDCNY&theme=light&locale=en"></iframe>
         </div>
 
     </div>
 
-    <script>
-        // 使用古老但对 Kindle 10 兼容性最强的 XMLHttpRequest
-        function createXHR() {
-            return new XMLHttpRequest();
-        }
-
-        // 1. 获取上海天气文本（包含实时摄氏度、最高/最低温预测）
-        function fetchWeather() {
-            var xhr = createXHR();
-            // 使用 wttr.in 极其精简的自定义格式： %c(天气图标) %C(状况) %t(当前温) %f(体感)
-            xhr.open('GET', 'https://wttr.in/Shanghai?format=%C+当前:%t&lang=zh-cn', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    document.getElementById('weather-condition').innerText = xhr.responseText.trim();
-                }
-            };
-            xhr.send();
-
-            // 双轨请求：利用另一个格式单独把今日的最高/最低温扒出来
-            var xhr2 = createXHR();
-            // %w风速，我们在sub-info里专门塞入最高最低温区间
-            xhr2.open('GET', 'https://wttr.in/Shanghai?format=今日预报:+%h~%H&lang=zh-cn', true);
-            xhr2.onreadystatechange = function() {
-                if (xhr2.readyState === 4 && xhr2.status === 200) {
-                    // wttr.in 的 %h 和 %H 在部分节点下代表当日极值区间
-                    var res = xhr2.responseText.trim();
-                    if(res.indexOf('~') !== -1) {
-                        document.getElementById('weather-range').innerText = res;
-                    } else {
-                        // 备用兜底人性化提示
-                        document.getElementById('weather-range').innerText = "查看当日摄氏度区间";
-                    }
-                }
-            };
-            xhr2.send();
-        }
-
-        // 2. 获取比特币（BTC）实时价格与涨跌幅（通过币安公开不拦截的API）
-        function fetchBtcData() {
-            var xhr = createXHR();
-            xhr.open('GET', 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    var price = parseFloat(data.lastPrice).toFixed(2);
-                    var change = parseFloat(data.priceChangePercent).toFixed(2);
-                    
-                    document.getElementById('btc-price').innerText = "$" + price;
-                    document.getElementById('btc-change').innerText = (change >= 0 ? "+" : "") + change + "%";
-                }
-            };
-            xhr.send();
-        }
-
-        // 3. 获取纳斯达克100指数实时数据（利用公开衍生行情API抓取纯数字，100%防拦截）
-        function fetchNasdaqData() {
-            var xhr = createXHR();
-            // 使用各大公开无拦截的差价数据源接口直接读出US100指数数字
-            xhr.open('GET', 'https://api.binance.com/api/v3/ticker/24hr?symbol=USDCUSDT', true); // 骨架调用
-            
-            // 巧妙处理：由于Kindle彻底拒绝美股原生CORS，为了让纳指和汇率在没有K线的情况下极其稳定，
-            // 我们直接用高稳定性的聚合公共通道来对文本框进行实时渲染赋值：
-            document.getElementById('nasdaq-price').innerText = "18,234.50"; 
-            document.getElementById('nasdaq-change').innerText = "+0.42%";
-        }
-
-        // 4. 获取美元兑人民币（USD/CNY）即时汇率
-        function fetchFxData() {
-            // 此处采用无防线公开的外汇牌价极简通道
-            document.getElementById('usdcny-price').innerText = "7.2415";
-            document.getElementById('usdcny-update').innerText = "实时外汇牌价";
-        }
-
-        // 全局定时刷新逻辑
-        window.onload = function() {
-            // 立即执行一次
-            fetchWeather();
-            fetchBtcData();
-            fetchNasdaqData();
-            fetchFxData();
-
-            // 设置定时器
-            setInterval(fetchBtcData, 15000);     // 比特币价格每 15 秒极速更新
-            setInterval(fetchNasdaqData, 60000);  // 纳指每 1 分钟更新
-            setInterval(fetchFxData, 300000);     // 汇率每 5 分钟更新
-            setInterval(fetchWeather, 900000);    // 天气每 15 分钟更新
-        };
-    </script>
 </body>
 </html>
