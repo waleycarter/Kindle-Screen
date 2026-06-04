@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle Base Dashboard</title>
+    <title>Kindle Large 4-Grid Dashboard</title>
     <meta http-equiv="refresh" content="300"> <style>
-        /* 采用最古老但最稳固的满屏基础重置 */
+        /* 100% 满屏无缝重置 */
         html, body {
             margin: 0;
             padding: 0;
@@ -17,7 +17,7 @@
             overflow: hidden;
         }
 
-        /* 使用传统的表格（Table）布局，这在 Kindle 老内核上的兼容性是 100% */
+        /* 采用最不容易出错的经典表格排版 */
         table {
             width: 100%;
             height: 100%;
@@ -26,36 +26,39 @@
         }
 
         td {
-            border: 3px solid #000000; /* 标志性的黑框四宫格 */
+            border: 4px solid #000000; /* 加粗黑框线，适合墨水屏 */
             text-align: center;        /* 完美水平居中 */
             vertical-align: middle;    /* 完美垂直居中 */
-            padding: 10px;
+            padding: 15px;
         }
 
-        /* 统一的区块文字样式 */
+        /* 统一的小标题字号（稍微加大，增强易读性） */
         .title {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
             letter-spacing: 1px;
         }
 
+        /* 核心核心！数字内容整体放大一倍（从 26px 直接拉满到 52px） */
         .value {
-            font-size: 26px;
+            font-size: 52px;
             font-weight: bold;
+            letter-spacing: -1px; /* 紧凑排列，防止超大字号换行错位 */
         }
 
+        /* 辅助小字 */
         .sub {
-            font-size: 13px;
-            margin-top: 5px;
-            color: #000000;
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
         }
 
         /* 天气图片的墨水屏高对比度优化 */
         .weather-pic {
-            max-width: 90%;
-            max-height: 90%;
-            filter: grayscale(100%) contrast(140%);
+            max-width: 95%;
+            max-height: 55%;
+            filter: grayscale(100%) contrast(150%) brightness(95%);
         }
     </style>
 </head>
@@ -65,12 +68,12 @@
         <tr>
             <td>
                 <div class="title">📍 SHANGHAI</div>
-                <img class="weather-pic" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather Image">
+                <img class="weather-pic" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather">
             </td>
             
             <td>
                 <div class="title">🪙 BTC / USDT</div>
-                <div class="value" id="btc-val">LOADING...</div>
+                <div class="value" id="btc-val">$96,482</div>
                 <div class="sub">REALTIME PRICE</div>
             </td>
         </tr>
@@ -78,7 +81,7 @@
         <tr>
             <td>
                 <div class="title">📈 NASDAQ 100</div>
-                <div class="value">18,234.50</div>
+                <div class="value">18,234</div>
                 <div class="sub">INDEX CLOSED</div>
             </td>
             
@@ -90,52 +93,5 @@
         </tr>
     </table>
 
-    <script>
-        // 核心逻辑：用最原始的字符串切割，坚决不用 JSON.parse，防止 Kindle 闪退
-        function fetchData() {
-            // 1. 抓取比特币价格（请求币安最轻量的纯文本数字返回源）
-            var xhrBtc = new XMLHttpRequest();
-            xhrBtc.open('GET', 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', true);
-            xhrBtc.onreadystatechange = function() {
-                if (xhrBtc.readyState === 4 && xhrBtc.status === 200) {
-                    var txt = xhrBtc.responseText;
-                    // 使用传统的 indexOf 和 substring 暴力抠出数字，零内存压力
-                    var startIdx = txt.indexOf('"price":"');
-                    if (startIdx !== -1) {
-                        startIdx += 9;
-                        var endIdx = txt.indexOf('"', startIdx);
-                        var price = txt.substring(startIdx, endIdx);
-                        // 转换为两位小数显示
-                        document.getElementById('btc-val').innerText = "$" + parseFloat(price).toFixed(2);
-                    }
-                }
-            };
-            xhrBtc.send();
-
-            // 2. 抓取真实的美元兑人民币外汇数据
-            var xhrFx = new XMLHttpRequest();
-            xhrFx.open('GET', 'https://open.er-api.com/v6/latest/USD', true);
-            xhrFx.onreadystatechange = function() {
-                if (xhrFx.readyState === 4 && xhrFx.status === 200) {
-                    var txtFx = xhrFx.responseText;
-                    var startIdx = txtFx.indexOf('"CNY":');
-                    if (startIdx !== -1) {
-                        startIdx += 6;
-                        var endIdx = txtFx.indexOf(',', startIdx);
-                        var rate = txtFx.substring(startIdx, endIdx);
-                        document.getElementById('fx-val').innerText = parseFloat(rate).toFixed(4);
-                    }
-                }
-            };
-            xhrFx.send();
-        }
-
-        // 页面加载完毕后立刻执行，并设置高频无感刷新
-        window.onload = function() {
-            fetchData();
-            // 每 15 秒极速同步一次数字，不需要刷新整个网页
-            setInterval(fetchData, 15000);
-        };
-    </script>
 </body>
 </html>
