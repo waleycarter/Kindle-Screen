@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle E-Ink Dashboard V4</title>
-    <meta http-equiv="refresh" content="600"> <style>
+    <title>Kindle Minimal BTC & NASDAQ Dashboard</title>
+    <meta http-equiv="refresh" content="600"> <!-- 10分钟整页强刷清除墨水屏残影 -->
+    <style>
         body {
             background-color: #ffffff;
             color: #000000;
@@ -16,44 +17,58 @@
             height: 95vh;
             overflow: hidden;
         }
-        /* 顶部区域：天气与时钟 */
+        
+        /* 顶部区域：左天气，右纳指 */
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #000000;
             padding-bottom: 6px;
-            height: 14%;
+            height: 16%;
         }
+        
+        /* 左上角天气盒 */
         .weather-box { 
-            width: 60%;
+            width: 50%;
             height: 100%;
             display: flex;
             align-items: center;
+            justify-content: flex-start;
         }
-        /* 纯英文国际图片流，彻底绝交乱码 */
         .weather-img {
-            max-height: 90%;
+            max-height: 100%;
             max-width: 100%;
             object-fit: contain;
-            /* 强制转换为墨水屏高对比度黑白 */
-            filter: grayscale(100%) contrast(140%);
+            filter: grayscale(100%) contrast(140%); /* 墨水屏黑白滤镜 */
         }
-        .time-box { 
-            width: 35%;
-            text-align: right; 
-            font-size: 14px; 
-            color: #000000; 
-            font-weight: bold;
-            line-height: 1.4; 
+        
+        /* 右上角纳指盒 */
+        .nasdaq-box { 
+            width: 45%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .nasdaq-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            filter: grayscale(100%) contrast(150%); /* 强制变黑白数字 */
         }
 
-        /* 中部按钮区 */
+        /* 中部：仅保留BTC的周期选择按钮 */
         .nav-section {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin: 6px 0;
+            margin: 8px 0;
+        }
+        .btn-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-align: left;
         }
         .btn-group {
             display: flex;
@@ -69,14 +84,14 @@
             padding: 8px 0;
             flex: 1;
             margin: 0 3px;
-            font-size: 16px;
+            font-size: 15px;
         }
         button.active {
             background-color: #000000;
             color: #ffffff;
         }
 
-        /* 核心图表区 */
+        /* 底部：BTC专属超大K线图表区 */
         .chart-section {
             flex-grow: 1;
             width: 100%;
@@ -84,8 +99,7 @@
             box-sizing: border-box;
             background-color: #ffffff;
         }
-        /* CSS墨水屏专用高对比度滤镜 */
-        #tv-iframe {
+        #btc-kline-iframe {
             width: 100%;
             height: 100%;
             border: none;
@@ -95,19 +109,22 @@
 </head>
 <body>
 
+    <!-- 顶部数据面板 -->
     <div class="header-section">
+        <!-- 左上角：上海天气（更新为中文+摄氏度公制单位图片，且优化为1行紧凑型） -->
         <div class="weather-box">
-            <img class="weather-img" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather">
+            <img class="weather-img" src="https://wttr.in/Shanghai_0pq_lang=zh-cn.png" alt="Weather">
         </div>
-        <div class="time-box" id="live-clock">--:--:--</div>
+        
+        <!-- 右上角：纳斯达克指数实时纯数字报价（无K线，省空间） -->
+        <div class="nasdaq-box">
+            <iframe class="nasdaq-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=CAPITALCOM%3AUS100&theme=light&locale=zh_CN"></iframe>
+        </div>
     </div>
 
+    <!-- 中部：BTC 周期触控板 -->
     <div class="nav-section">
-        <div class="btn-group">
-            <button class="coin-btn active" onclick="switchAsset('BINANCE:BTCUSDT', this)">BTC</button>
-            <button class="coin-btn" onclick="switchAsset('BINANCE:ETHUSDT', this)">ETH</button>
-            <button class="coin-btn" onclick="switchAsset('CAPITALCOM:US100', this)">NASDAQ</button>
-        </div>
+        <div class="btn-title">🪙 BTC / USDT 周期切换:</div>
         <div class="btn-group">
             <button class="tf-btn" onclick="switchTimeframe('15', this)">15m</button>
             <button class="tf-btn active" onclick="switchTimeframe('60', this)">1h</button>
@@ -117,33 +134,26 @@
         </div>
     </div>
 
+    <!-- 底部：BTC 专属 K 线主图 -->
     <div class="chart-section">
-        <iframe id="tv-iframe" src=""></iframe>
+        <iframe id="btc-kline-iframe" src=""></iframe>
     </div>
 
     <script>
-        var currentSymbol = "BINANCE:BTCUSDT";
+        // 锁定只能显示比特币
+        var btcSymbol = "BINANCE:BTCUSDT";
         var currentInterval = "60";
 
-        function updateIframeSrc() {
-            var iframe = document.getElementById('tv-iframe');
+        // 仅刷新底部的 BTC K线
+        function updateBtcChart() {
+            var iframe = document.getElementById('btc-kline-iframe');
             if (iframe) {
-                // 使用最基础的嵌入参数，避免触发 TradingView 的高级验证
-                var targetUrl = "https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=" + currentSymbol + "&interval=" + currentInterval + "&theme=light&style=1&timezone=Asia%2FShanghai";
+                var targetUrl = "https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=" + btcSymbol + "&interval=" + currentInterval + "&theme=light&style=1&timezone=Asia%2FShanghai";
                 iframe.src = targetUrl;
             }
         }
 
-        function switchAsset(symbol, btn) {
-            currentSymbol = symbol;
-            var buttons = document.querySelectorAll('.coin-btn');
-            for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('active');
-            }
-            btn.classList.add('active');
-            updateIframeSrc();
-        }
-
+        // 切换 K 线周期的逻辑
         function switchTimeframe(interval, btn) {
             currentInterval = interval;
             var buttons = document.querySelectorAll('.tf-btn');
@@ -151,25 +161,12 @@
                 buttons[i].classList.remove('active');
             }
             btn.classList.add('active');
-            updateIframeSrc();
+            updateBtcChart();
         }
 
-        function updateClock() {
-            var now = new Date();
-            var hours = now.getHours();
-            var minutes = now.getMinutes();
-            var seconds = now.getSeconds();
-            if (hours < 10) hours = "0" + hours;
-            if (minutes < 10) minutes = "0" + minutes;
-            if (seconds < 10) seconds = "0" + seconds;
-            
-            document.getElementById('live-clock').innerHTML = "SHANGHAI<br>" + hours + ":" + minutes + ":" + seconds;
-        }
-
+        // 页面初始化
         window.onload = function() {
-            updateIframeSrc();
-            updateClock();
-            setInterval(updateClock, 1000);
+            updateBtcChart();
         };
     </script>
 </body>
