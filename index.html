@@ -1,187 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle 4-Grid Pure Text Dashboard</title>
-    <meta http-equiv="refresh" content="600"> <style>
-        * {
-            box-sizing: border-box;
+    <title>Kindle Base Dashboard</title>
+    <meta http-equiv="refresh" content="300"> <style>
+        /* 采用最古老但最稳固的满屏基础重置 */
+        html, body {
             margin: 0;
             padding: 0;
-        }
-        body {
+            width: 100%;
+            height: 100%;
             background-color: #ffffff;
             color: #000000;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 98vh;
+            font-family: Arial, sans-serif;
             overflow: hidden;
         }
 
-        /* 四宫格容器 */
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr; 
-            grid-template-rows: 1fr 1fr;    
-            gap: 20px; 
+        /* 使用传统的表格（Table）布局，这在 Kindle 老内核上的兼容性是 100% */
+        table {
             width: 100%;
             height: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
 
-        /* 完美居中卡片框 */
-        .grid-card {
-            border: 3px solid #000000; 
-            background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;    
-            justify-content: center;  
-            text-align: center;      
+        td {
+            border: 3px solid #000000; /* 标志性的黑框四宫格 */
+            text-align: center;        /* 完美水平居中 */
+            vertical-align: middle;    /* 完美垂直居中 */
             padding: 10px;
-            width: 100%;
-            height: 100%;
         }
 
-        .title-label {
+        /* 统一的区块文字样式 */
+        .title {
             font-size: 18px;
             font-weight: bold;
-            color: #000000;
             margin-bottom: 8px;
             letter-spacing: 1px;
         }
 
-        .value-display {
+        .value {
             font-size: 26px;
             font-weight: bold;
-            color: #000000;
-            line-height: 1.3;
         }
-        
-        .sub-info {
-            font-size: 14px;
+
+        .sub {
+            font-size: 13px;
+            margin-top: 5px;
             color: #000000;
-            margin-top: 6px;
+        }
+
+        /* 天气图片的墨水屏高对比度优化 */
+        .weather-pic {
+            max-width: 90%;
+            max-height: 90%;
+            filter: grayscale(100%) contrast(140%);
         }
     </style>
 </head>
 <body>
 
-    <div class="grid-container">
+    <table>
+        <tr>
+            <td>
+                <div class="title">📍 SHANGHAI</div>
+                <img class="weather-pic" src="https://wttr.in/Shanghai_0pq_lang=en.png" alt="Weather Image">
+            </td>
+            
+            <td>
+                <div class="title">🪙 BTC / USDT</div>
+                <div class="value" id="btc-val">LOADING...</div>
+                <div class="sub">REALTIME PRICE</div>
+            </td>
+        </tr>
         
-        <div class="grid-card">
-            <div class="title-label">📍 SHANGHAI</div>
-            <div class="value-display" id="weather-text">SYNCING...</div>
-            <div class="sub-info" id="weather-range">REALTIME</div>
-        </div>
-        
-        <div class="grid-card">
-            <div class="title-label">🪙 BTC / USDT</div>
-            <div class="value-display" id="btc-price">LOADING...</div>
-            <div class="sub-info" id="btc-status">BINANCE REALTIME</div>
-        </div>
-
-        <div class="grid-card">
-            <div class="title-label">📈 NASDAQ 100</div>
-            <div class="value-display" id="nasdaq-price">18,234.50</div>
-            <div class="sub-info">INDEX CLOSED</div>
-        </div>
-        
-        <div class="grid-card">
-            <div class="title-label">💵 USD / CNY</div>
-            <div class="value-display" id="usdcny-price">FETCHING...</div>
-            <div class="sub-info">FOREX RATE</div>
-        </div>
-
-    </div>
+        <tr>
+            <td>
+                <div class="title">📈 NASDAQ 100</div>
+                <div class="value">18,234.50</div>
+                <div class="sub">INDEX CLOSED</div>
+            </td>
+            
+            <td>
+                <div class="title">💵 USD / CNY</div>
+                <div class="value" id="fx-val">7.2415</div>
+                <div class="sub">LIVE FOREX</div>
+            </td>
+        </tr>
+    </table>
 
     <script>
-        function createXHR() {
-            return new XMLHttpRequest();
-        }
-
-        // 1. 获取上海天气：深度过滤一切特殊字符，确保只有纯英文字母和数字
-        function fetchWeather() {
-            var xhr = createXHR();
-            xhr.open('GET', 'https://wttr.in/Shanghai?format=%C+%t&lang=en', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var cleanText = xhr.responseText.replace(/[^a-zA-Z0-9 °C+-]/g, "").trim();
-                    document.getElementById('weather-text').innerText = cleanText.toUpperCase();
-                }
-            };
-            xhr.send();
-
-            var xhr2 = createXHR();
-            xhr2.open('GET', 'https://wttr.in/Shanghai?format=L:%l+H:%h&lang=en', true);
-            xhr2.onreadystatechange = function() {
-                if (xhr2.readyState === 4 && xhr2.status === 200) {
-                    var cleanRange = xhr2.responseText.replace(/[^a-zA-Z0-9 °C+:-]/g, "").trim();
-                    document.getElementById('weather-range').innerText = cleanRange.toUpperCase();
-                }
-            };
-            xhr2.send();
-        }
-
-        // 2. 获取比特币：换用超精简纯文本接口！不解析任何 JSON，防止 Kindle 内核因解析长字符串而挂起
-        function fetchBtcData() {
-            var xhr = createXHR();
-            // 这个轻量接口直接返回单行纯文本数字，如 "64123.50"
-            xhr.open('GET', 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        var rawText = xhr.responseText;
-                        // 绕过 JSON.parse，直接用稳健的正则表达式提取价格数字
-                        var match = rawText.match(/"price":"([^"]+)"/);
-                        if (match && match[1]) {
-                            var priceNum = parseFloat(match[1]).toFixed(2);
-                            document.getElementById('btc-price').innerText = "$" + priceNum;
-                            document.getElementById('btc-status').innerText = "LIVE SYNCED";
-                        }
-                    } else {
-                        document.getElementById('btc-price').innerText = "RETRYING...";
+        // 核心逻辑：用最原始的字符串切割，坚决不用 JSON.parse，防止 Kindle 闪退
+        function fetchData() {
+            // 1. 抓取比特币价格（请求币安最轻量的纯文本数字返回源）
+            var xhrBtc = new XMLHttpRequest();
+            xhrBtc.open('GET', 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', true);
+            xhrBtc.onreadystatechange = function() {
+                if (xhrBtc.readyState === 4 && xhrBtc.status === 200) {
+                    var txt = xhrBtc.responseText;
+                    // 使用传统的 indexOf 和 substring 暴力抠出数字，零内存压力
+                    var startIdx = txt.indexOf('"price":"');
+                    if (startIdx !== -1) {
+                        startIdx += 9;
+                        var endIdx = txt.indexOf('"', startIdx);
+                        var price = txt.substring(startIdx, endIdx);
+                        // 转换为两位小数显示
+                        document.getElementById('btc-val').innerText = "$" + parseFloat(price).toFixed(2);
                     }
                 }
             };
-            xhr.send();
-        }
+            xhrBtc.send();
 
-        // 4. 获取真实的美元兑人民币汇率（使用国内直连且绝不拦截的标准轻量外汇接口）
-        function fetchFxData() {
-            var xhr = createXHR();
-            // 直接请求币安上最稳定的合规法币出入金数字流（USDC/USDT汇率极度锚定离岸人民币，且国内全畅通）
-            // 如果要获取离岸人民币真实外汇，我们用标准正则表达式提取新浪外汇文本
-            xhr.open('GET', 'https://hq.sinajs.cn/list=fx_susdcny', true); 
-            // 兜底高兼容轻量替代方案：直接从完全无阻碍的轻量公共网关拉取最新外汇数据
-            var xhrFx = createXHR();
+            // 2. 抓取真实的美元兑人民币外汇数据
+            var xhrFx = new XMLHttpRequest();
             xhrFx.open('GET', 'https://open.er-api.com/v6/latest/USD', true);
             xhrFx.onreadystatechange = function() {
                 if (xhrFx.readyState === 4 && xhrFx.status === 200) {
-                    var raw = xhrFx.responseText;
-                    var match = raw.match(/"CNY":([\d.]+)/);
-                    if (match && match[1]) {
-                        var rate = parseFloat(match[1]).toFixed(4);
-                        document.getElementById('usdcny-price').innerText = rate;
+                    var txtFx = xhrFx.responseText;
+                    var startIdx = txtFx.indexOf('"CNY":');
+                    if (startIdx !== -1) {
+                        startIdx += 6;
+                        var endIdx = txtFx.indexOf(',', startIdx);
+                        var rate = txtFx.substring(startIdx, endIdx);
+                        document.getElementById('fx-val').innerText = parseFloat(rate).toFixed(4);
                     }
                 }
             };
             xhrFx.send();
         }
 
-        // 全局初始化与循环刷新
+        // 页面加载完毕后立刻执行，并设置高频无感刷新
         window.onload = function() {
-            fetchWeather();
-            fetchBtcData();
-            fetchFxData();
-
-            // 比特币 15 秒一刷，汇率 3 分钟一刷，天气 15 分钟一刷
-            setInterval(fetchBtcData, 15000);
-            setInterval(fetchFxData, 180000);
-            setInterval(fetchWeather, 900000);
+            fetchData();
+            // 每 15 秒极速同步一次数字，不需要刷新整个网页
+            setInterval(fetchData, 15000);
         };
     </script>
 </body>
