@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTC Ticker</title>
+    <!-- 每隔 10 分钟整页强制刷新一次，防止 Kindle 的 Wi-Fi 自动断开省电 -->
+    <meta http-equiv="refresh" content="600"> 
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .symbol {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        .price {
+            font-size: 64px;
+            font-weight: bold;
+        }
+        .time {
+            font-size: 16px;
+            color: #666666;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="symbol">BTC / USDT</div>
+    <div class="price" id="btc-price">加载中...</div>
+    <div class="time" id="update-time">--:--:--</div>
+
+    <script>
+        function fetchPrice() {
+            // 币安公开接口
+            fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+                .then(response => response.json())
+                .then(data => {
+                    const price = parseFloat(data.price).toFixed(2);
+                    // 加上千分位逗号，让价格更易读（例如 $68,123.45）
+                    document.getElementById('btc-price').innerText = '$' + parseFloat(price).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    
+                    const now = new Date();
+                    document.getElementById('update-time').innerText = '最后更新: ' + now.toLocaleTimeString();
+                })
+                .catch(err => {
+                    document.getElementById('btc-price').innerText = '网络错误';
+                });
+        }
+
+        fetchPrice();
+        // 每 30 秒局部刷新一次数据
+        setInterval(fetchPrice, 30000);
+    </script>
+</body>
+</html>
