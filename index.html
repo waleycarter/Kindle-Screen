@@ -1,40 +1,88 @@
-<script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTC Ticker</title>
+    <meta http-equiv="refresh" content="600"> 
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .symbol {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        .price {
+            font-size: 64px;
+            font-weight: bold;
+        }
+        .time {
+            font-size: 16px;
+            color: #666666;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="symbol">BTC / USDT</div>
+    <div class="price" id="btc-price">加载中...</div>
+    <div class="time" id="update-time">--:--:--</div>
+
+    <script>
         function fetchPrice() {
-            // 更换为国内可直连的替代行情接口（此处使用无须鉴权的公共平替接口）
+            // 使用 CoinGecko API 获取价格（国内相对容易直连）
             fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
-                .then(response => response.json())
-                .then(data => {
-                    const price = parseFloat(data.bitcoin.usd).toFixed(2);
-                    // 加上千分位逗号
-                    document.getElementById('btc-price').innerText = '$' + parseFloat(price).toLocaleString('en-US', {minimumFractionDigits: 2});
-                    
-                    const now = new Date();
-                    document.getElementById('update-time').innerText = '最后更新: ' + now.toLocaleTimeString();
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data && data.bitcoin && data.bitcoin.usd) {
+                        var price = parseFloat(data.bitcoin.usd).toFixed(2);
+                        document.getElementById('btc-price').innerText = '$' + parseFloat(price).toLocaleString('en-US', {minimumFractionDigits: 2});
+                        var now = new Date();
+                        document.getElementById('update-time').innerText = '最后更新: ' + now.toLocaleTimeString();
+                    } else {
+                        fetchBackupPrice();
+                    }
                 })
-                .catch(err => {
-                    // 如果依然失败，尝试备用接口
+                .catch(function(err) {
                     fetchBackupPrice();
                 });
         }
 
         function fetchBackupPrice() {
-            // 备用接口：Gate.io 交易所国内相对稳定的公开接口
+            // 备用接口：Gate.io
             fetch('https://api.gateio.ws/api/v4/spot/tickers?currency_pair=BTC_USDT')
-                .then(response => response.json())
-                .then(data => {
-                    if(data && data.length > 0) {
-                        const price = parseFloat(data[0].last).toFixed(2);
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data && data.length > 0 && data[0].last) {
+                        var price = parseFloat(data[0].last).toFixed(2);
                         document.getElementById('btc-price').innerText = '$' + parseFloat(price).toLocaleString('en-US', {minimumFractionDigits: 2});
-                        const now = new Date();
+                        var now = new Date();
                         document.getElementById('update-time').innerText = '最后更新(备用): ' + now.toLocaleTimeString();
+                    } else {
+                        document.getElementById('btc-price').innerText = '读取失败';
                     }
                 })
-                .catch(err => {
+                .catch(function(err) {
                     document.getElementById('btc-price').innerText = '网络连接失败';
                 });
         }
 
         fetchPrice();
-        // 每 30 秒局部刷新一次数据
         setInterval(fetchPrice, 30000);
     </script>
+</body>
+</html>
