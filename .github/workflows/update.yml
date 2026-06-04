@@ -1,0 +1,44 @@
+name: Update Kindle Dashboard Data
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 每 5 分钟自动运行一次
+  workflow_dispatch: # 允许你手动点击按钮测试运行
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Fetch Live Data From Servers
+      run: |
+        # 1. 抓取真实的比特币价格并格式化
+        BTC_PRICE=$(curl -s "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT" | sed -E 's/.*"price":"([0-9.]+).*/\1/' | xargs printf "$%.0f")
+        echo "BTC: $BTC_PRICE"
+
+        # 2. 抓取真实的汇率并格式化
+        FX_RATE=$(curl -s "https://open.er-api.com/v6/latest/USD" | sed -E 's/.*"CNY":([0-9.]+).//' | cut -d',' -f1 | xargs printf "%.4f")
+        echo "FX: $FX_RATE"
+
+        # 3. 抓取真实的纳指 (从雅虎财经极简抓取)
+        NDX_VALUE=$(curl -s "https://query1.finance.yahoo.com/v8/finance/chart/%5ENDX" | sed -E 's/.*"regularMarketPrice":([0-9.]+).*/\1/' | xargs printf "%.0f")
+        echo "NDX: $NDX_VALUE"
+
+        # 4. 抓取上海最新天气纯数字
+        WEATHER_TEMP=$(curl -s "https://wttr.in/Shanghai?format=%t" | tr -d '+°C ' | xargs printf "%s °C")
+        echo "Weather: $WEATHER_TEMP"
+
+        # 5. 用新抓到的数据替换 index.html 里面的占位内容
+        sed -i -E "s/id=\"weather-val\">[^<]+/id=\"weather-val\">$WEATHER_TEMP/" index.html
+        sed -i -E "s/id=\"btc-val\">[^<]+/id=\"btc-val\">$BTC_PRICE/" index.html
+        sed -i -E "s/id=\"ndx-val\">[^<]+/id=\"ndx-val\">$NDX_VALUE/" index.html
+        sed -i -E "s/id=\"fx-val\">[^<]+/id=\"fx-val\">$FX_RATE/" index.html
+
+    - name: Commit and Push to Github Pages
+      run: |
+        git config --global user.name "Github Action Robot"
+        git config --global user.email "action@github.com"
+        git add index.html
+        git diff-index --quiet HEAD || git commit -m "Automated data sync"
+        git push
