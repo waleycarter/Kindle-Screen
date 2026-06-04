@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle Dashboard Fix</title>
+    <title>Kindle Dashboard Final</title>
     <meta http-equiv="refresh" content="600"> <style>
         body {
             background-color: #ffffff;
@@ -28,7 +28,7 @@
         .weather-box { text-align: left; }
         .weather-city { font-size: 18px; font-weight: bold; }
         .weather-detail { font-size: 13px; color: #333; margin-top: 2px; }
-        .time-box { text-align: right; font-size: 13px; color: #505050; }
+        .time-box { text-align: right; font-size: 13px; color: #505050; line-height: 1.4; }
 
         /* 中部按钮区 */
         .nav-section {
@@ -66,7 +66,7 @@
             box-sizing: border-box;
             background-color: #ffffff;
         }
-        /* CSS墨水屏专用滤镜：将彩色的K线转换为高对比度的纯黑白，极大提高无光墨水屏的可见度 */
+        /* CSS墨水屏专用高对比度滤镜 */
         #tv-iframe {
             width: 100%;
             height: 100%;
@@ -87,9 +87,9 @@
 
     <div class="nav-section">
         <div class="btn-group">
-            <button class="coin-btn active" onclick="switchCoin('BINANCE:BTCUSDT', this)">BTC</button>
-            <button class="coin-btn" onclick="switchCoin('BINANCE:ETHUSDT', this)">ETH</button>
-            <button class="coin-btn" onclick="switchCoin('BINANCE:SOLUSDT', this)">SOL</button>
+            <button class="coin-btn active" onclick="switchAsset('BINANCE:BTCUSDT', this)">BTC</button>
+            <button class="coin-btn" onclick="switchAsset('BINANCE:ETHUSDT', this)">ETH</button>
+            <button class="coin-btn" onclick="switchAsset('INDEX:IXIC', this)">NASDAQ</button>
         </div>
         <div class="btn-group">
             <button class="tf-btn" onclick="switchTimeframe('15', this)">15m</button>
@@ -105,21 +105,20 @@
     </div>
 
     <script>
-        // 采用最保险的古老ES5语法（var），确保旧版Kindle绝对不报错
+        // 采用老旧Kindle绝对支持的 var 语法
         var currentSymbol = "BINANCE:BTCUSDT";
         var currentInterval = "60";
 
-        // 核心：刷新并重组iframe的URL
+        // 刷新并重组图表 URL
         function updateIframeSrc() {
             var iframe = document.getElementById('tv-iframe');
             if (iframe) {
-                // 直接利用官方稳定的embed嵌入页地址，隐藏一切不需要的彩色杂项，最大化图表空间
                 var targetUrl = "https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=" + currentSymbol + "&interval=" + currentInterval + "&theme=light&style=1&timezone=Asia%2FShanghai&studies=%5B%5D&widgets=%5B%5D";
                 iframe.src = targetUrl;
             }
         }
 
-        function switchCoin(symbol, btn) {
+        function switchAsset(symbol, btn) {
             currentSymbol = symbol;
             var buttons = document.querySelectorAll('.coin-btn');
             for (var i = 0; i < buttons.length; i++) {
@@ -139,21 +138,28 @@
             updateIframeSrc();
         }
 
+        // 用最古老、最稳健的 XMLHttpRequest 代替 fetch，彻底解决老旧 Kindle 报错问题
         function fetchWeather() {
-            // wttr.in 免费天气源
-            fetch('https://wttr.in/Shanghai?format=%c+%t+%C+湿度:%h')
-                .then(function(res) { return res.text(); })
-                .then(function(data) {
-                    document.getElementById('weather-text').innerText = data.trim();
-                })
-                .catch(function() {
-                    document.getElementById('weather-text').innerText = "☁️ 18°C 阴天";
-                });
+            var xhr = new XMLHttpRequest();
+            // 使用 wttr.in 极其精简的纯文本接口，过滤掉复杂的特殊字符
+            xhr.open('GET', 'https://wttr.in/Shanghai?format=%c+%t+%C', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var resText = xhr.responseText.trim();
+                        document.getElementById('weather-text').innerText = resText;
+                    } else {
+                        document.getElementById('weather-text').innerText = "☁️ 上海行情正常";
+                    }
+                }
+            };
+            xhr.send();
         }
 
         function updateClock() {
             var now = new Date();
-            document.getElementById('live-clock').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
+            var timeString = now.toLocaleTimeString('zh-CN', { hour12: false });
+            document.getElementById('live-clock').innerHTML = "上海时间<br>" + timeString;
         }
 
         // 页面加载完成后立即执行
@@ -162,7 +168,7 @@
             fetchWeather();
             updateClock();
             setInterval(updateClock, 1000);
-            setInterval(fetchWeather, 1800000); // 半小时刷新一次天气
+            setInterval(fetchWeather, 1800000); // 每半小时更新一次天气
         };
     </script>
 </body>
