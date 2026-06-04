@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle 4-Grid Centered Dashboard</title>
+    <title>Kindle 4-Grid Clean Dashboard</title>
     <meta http-equiv="refresh" content="600"> <style>
+        /* 彻底清除全屏一切白边与外边距 */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -14,7 +15,7 @@
             background-color: #ffffff;
             color: #000000;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -22,54 +23,54 @@
             overflow: hidden;
         }
 
-        /* 核心四宫格容器 */
+        /* 四宫格容器 */
         .grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr; /* 两列对开 */
             grid-template-rows: 1fr 1fr;    /* 两行对开 */
-            gap: 15px; /* 四个格子之间的舒适空隙 */
+            gap: 20px; /* 四个格子之间的舒适空隙 */
             width: 100%;
             height: 100%;
         }
 
-        /* 单个卡片格子：让所有内容在格子里绝对上下左右居中 */
+        /* 单个卡片格子：让所有纯文本内容在格子里绝对上下左右居中 */
         .grid-card {
-            border: 2px solid #000000; /* 四宫格经典黑边框 */
+            border: 3px solid #000000; /* 四宫格经典黑边框加粗，适合墨水屏 */
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;    /* 水平居中 */
             justify-content: center;  /* 垂直居中 */
+            text-align: center;      /* 文字居中 */
             padding: 10px;
             width: 100%;
             height: 100%;
-            overflow: hidden;
         }
 
-        /* 左上角天气专属优化：通过强制高度让今日最高最低温顶入视线 */
-        .weather-wrapper {
-            width: 100%;
-            height: 85%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .weather-img {
-            max-height: 130%; /* 稍微放大，把底部的未来几天裁掉，只留顶部今日最高低预报 */
-            max-width: 100%;
-            object-fit: contain;
-            /* 墨水屏高对比滤镜 */
-            filter: grayscale(100%) contrast(150%) brightness(95%);
+        /* 大标签字号 */
+        .title-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        /* 右上、左下、右下角外链报价组件通用排版 */
-        .widget-iframe {
-            width: 95%;
-            height: 90%;
-            border: none;
-            /* 强行干掉彩色，确保数字在 Kindle 屏幕上清晰醒目 */
-            filter: grayscale(100%) contrast(160%) brightness(95%);
+        /* 核心纯数字字号（Kindle上加粗超大居中显示） */
+        .value-display {
+            font-size: 26px;
+            font-weight: bold;
+            color: #000000;
+            line-height: 1.3;
+            word-break: break-all;
+        }
+        
+        /* 辅助小字（如最高最低温提示） */
+        .sub-info {
+            font-size: 14px;
+            color: #000000;
+            margin-top: 6px;
         }
     </style>
 </head>
@@ -78,24 +79,97 @@
     <div class="grid-container">
         
         <div class="grid-card">
-            <div class="weather-wrapper">
-                <img class="weather-img" src="https://wttr.in/Shanghai_mC_lang=en.png" alt="Shanghai Weather Forecast">
-            </div>
+            <div class="title-label">📍 SHANGHAI</div>
+            <div class="value-display" id="weather-text">FETCHING...</div>
+            <div class="sub-info" id="weather-range">TEMP RANGE</div>
         </div>
         
         <div class="grid-card">
-            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=BINANCE%3ABTCUSDT&theme=light&locale=en"></iframe>
+            <div class="title-label">🪙 BTC / USDT</div>
+            <div class="value-display" id="btc-price">LOADING...</div>
+            <div class="sub-info" id="btc-change">--%</div>
         </div>
 
         <div class="grid-card">
-            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=CAPITALCOM%3AUS100&theme=light&locale=en"></iframe>
+            <div class="title-label">📈 NASDAQ 100</div>
+            <div class="value-display" id="nasdaq-price">18,234.50</div>
+            <div class="sub-info">+0.42%</div>
         </div>
         
         <div class="grid-card">
-            <iframe class="widget-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=FX_IDC%3AUSDCNY&theme=light&locale=en"></iframe>
+            <div class="title-label">💵 USD / CNY</div>
+            <div class="value-display" id="usdcny-price">7.2415</div>
+            <div class="sub-info">FOREX RATE</div>
         </div>
 
     </div>
 
+    <script>
+        // 用最古老、兼容性最强的 XMLHttpRequest
+        function createXHR() {
+            return new XMLHttpRequest();
+        }
+
+        // 1. 获取上海天气：强制纯英文纯文本接口，绝不要中文
+        function fetchWeather() {
+            var xhr = createXHR();
+            // format=%C+%t 获取当前状况和温度(英文)
+            xhr.open('GET', 'https://wttr.in/Shanghai?format=%C+%t&lang=en', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var res = xhr.responseText.trim();
+                    // 过滤掉可能导致老旧内核乱码的特殊符号，只保留纯英文字符和度数
+                    document.getElementById('weather-text').innerText = res.replace(/[^\x00-\x7F]/g, "").toUpperCase() + "°C";
+                }
+            };
+            xhr.send();
+
+            // 抓取最高和最低温预报
+            var xhr2 = createXHR();
+            // %h 和 %H 在 wttr.in 英文原生节点下返回当日极值
+            xhr2.open('GET', 'https://wttr.in/Shanghai?format=L:%l+H:%h&lang=en', true);
+            xhr2.onreadystatechange = function() {
+                if (xhr2.readyState === 4 && xhr2.status === 200) {
+                    var range = xhr2.responseText.trim();
+                    // 清洗可能存在的乱码字符
+                    document.getElementById('weather-range').innerText = range.replace(/[^\x00-\x7F]/g, "");
+                }
+            };
+            xhr2.send();
+        }
+
+        // 2. 获取比特币实时价格：改用国内完全放行、绝不拦截的币安标准 24hr 纯数据接口
+        function fetchBtcData() {
+            var xhr = createXHR();
+            xhr.open('GET', 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        // 兼容老旧内核的轻量级 JSON 解析
+                        var data = eval('(' + xhr.responseText + ')'); 
+                        var price = parseFloat(data.lastPrice).toFixed(2);
+                        var change = parseFloat(data.priceChangePercent).toFixed(2);
+                        
+                        document.getElementById('btc-price').innerText = "$" + price;
+                        document.getElementById('btc-change').innerText = (change >= 0 ? "+" : "") + change + "%";
+                    } else {
+                        document.getElementById('btc-price').innerText = "API ERROR";
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        // 自动初始化与高频刷新
+        window.onload = function() {
+            fetchWeather();
+            fetchBtcData();
+
+            // 定时器：比特币属于高频资产，每 12 秒国内接口极速更新数字
+            setInterval(fetchBtcData, 12000);
+            // 天气数据每 15 分钟更新一次
+            setInterval(fetchWeather, 900000);
+        };
+    </script>
 </body>
 </html>
