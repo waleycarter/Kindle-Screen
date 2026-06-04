@@ -3,72 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle Minimal BTC & NASDAQ Dashboard</title>
-    <meta http-equiv="refresh" content="600"> <!-- 10分钟整页强刷清除墨水屏残影 -->
-    <style>
+    <title>Kindle FullScreen Dashboard</title>
+    <meta http-equiv="refresh" content="600"> <style>
+        /* 彻底清除全屏自带的白边 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             background-color: #ffffff;
             color: #000000;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 8px;
+            padding: 4px;
             display: flex;
             flex-direction: column;
-            height: 95vh;
+            height: 98vh;
             overflow: hidden;
         }
         
-        /* 顶部区域：左天气，右纳指 */
+        /* 顶部区域：零间隙、强行占满两角 */
         .header-section {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: stretch;
             border-bottom: 2px solid #000000;
-            padding-bottom: 6px;
-            height: 16%;
+            height: 18%;
+            width: 100%;
         }
         
-        /* 左上角天气盒 */
+        /* 左上角天气：宽度对半，死贴左边 */
         .weather-box { 
             width: 50%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-start;
+            overflow: hidden;
         }
         .weather-img {
-            max-height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-            filter: grayscale(100%) contrast(140%); /* 墨水屏黑白滤镜 */
+            height: 100%;
+            width: 100%;
+            object-fit: contain; /* 保持比例完美铺满左侧 */
+            object-position: left center; /* 强行靠左对齐，不留空隙 */
+            filter: grayscale(100%) contrast(140%); /* 墨水屏专用高对比黑白 */
         }
         
-        /* 右上角纳指盒 */
+        /* 右上角纳指：宽度对半，死贴右边 */
         .nasdaq-box { 
-            width: 45%;
+            width: 50%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            overflow: hidden;
         }
         .nasdaq-iframe {
             width: 100%;
-            height: 100%;
+            height: 110%; /* 稍微拉伸，挤掉TradingView自带的边框空隙 */
             border: none;
-            filter: grayscale(100%) contrast(150%); /* 强制变黑白数字 */
+            filter: grayscale(100%) contrast(150%);
         }
 
-        /* 中部：仅保留BTC的周期选择按钮 */
+        /* 中部：BTC 周期控制面板 */
         .nav-section {
             display: flex;
             flex-direction: column;
-            margin: 8px 0;
+            margin: 6px 0;
+            width: 100%;
         }
         .btn-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             text-align: left;
+            padding-left: 2px;
         }
         .btn-group {
             display: flex;
@@ -83,7 +92,7 @@
             cursor: pointer;
             padding: 8px 0;
             flex: 1;
-            margin: 0 3px;
+            margin: 0 2px;
             font-size: 15px;
         }
         button.active {
@@ -91,12 +100,11 @@
             color: #ffffff;
         }
 
-        /* 底部：BTC专属超大K线图表区 */
+        /* 底部：BTC 专属超大K线图表区 */
         .chart-section {
             flex-grow: 1;
             width: 100%;
             border: 2px solid #000000;
-            box-sizing: border-box;
             background-color: #ffffff;
         }
         #btc-kline-iframe {
@@ -109,20 +117,16 @@
 </head>
 <body>
 
-    <!-- 顶部数据面板 -->
     <div class="header-section">
-        <!-- 左上角：上海天气（更新为中文+摄氏度公制单位图片，且优化为1行紧凑型） -->
         <div class="weather-box">
             <img class="weather-img" src="https://wttr.in/Shanghai_0pq_lang=zh-cn.png" alt="Weather">
         </div>
         
-        <!-- 右上角：纳斯达克指数实时纯数字报价（无K线，省空间） -->
         <div class="nasdaq-box">
             <iframe class="nasdaq-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=CAPITALCOM%3AUS100&theme=light&locale=zh_CN"></iframe>
         </div>
     </div>
 
-    <!-- 中部：BTC 周期触控板 -->
     <div class="nav-section">
         <div class="btn-title">🪙 BTC / USDT 周期切换:</div>
         <div class="btn-group">
@@ -134,17 +138,14 @@
         </div>
     </div>
 
-    <!-- 底部：BTC 专属 K 线主图 -->
     <div class="chart-section">
         <iframe id="btc-kline-iframe" src=""></iframe>
     </div>
 
     <script>
-        // 锁定只能显示比特币
         var btcSymbol = "BINANCE:BTCUSDT";
         var currentInterval = "60";
 
-        // 仅刷新底部的 BTC K线
         function updateBtcChart() {
             var iframe = document.getElementById('btc-kline-iframe');
             if (iframe) {
@@ -153,7 +154,6 @@
             }
         }
 
-        // 切换 K 线周期的逻辑
         function switchTimeframe(interval, btn) {
             currentInterval = interval;
             var buttons = document.querySelectorAll('.tf-btn');
@@ -164,7 +164,6 @@
             updateBtcChart();
         }
 
-        // 页面初始化
         window.onload = function() {
             updateBtcChart();
         };
