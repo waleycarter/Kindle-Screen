@@ -6,8 +6,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle Ultimate JSONP Board</title>
-    <meta http-equiv="refresh" content="60"> 
+    <title>Kindle Automation Pure Matrix</title>
+    <meta http-equiv="refresh" content="180"> 
     <style>
         html, body {
             margin: 0;
@@ -35,13 +35,13 @@
         }
 
         .title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 15px;
             letter-spacing: 1px;
         }
 
-        /* 数字内容整体放大一倍，确保在 Kindle 上硕大无比 */
+        /* 核心痛点：数字内容整体放大一倍（56px超粗体） */
         .value {
             font-size: 56px;
             font-weight: bold;
@@ -61,72 +61,30 @@
         <tr>
             <td>
                 <div class="title">📍 SHANGHAI</div>
-                <div class="value" id="weather-val">LOADING</div>
+                <div class="value" id="weather-val">24 °C</div>
                 <div class="sub">REALTIME TEMP</div>
             </td>
             
             <td>
                 <div class="title">🪙 BTC / USDT</div>
-                <div class="value" id="btc-val">LOADING</div>
-                <div class="sub">REALTIME PRICE</div>
+                <div class="value" id="btc-val">$64,208</div>
+                <div class="sub">GITHUB SYNCED</div>
             </td>
         </tr>
         <tr>
             <td>
                 <div class="title">📈 NASDAQ 100</div>
-                <div class="value" id="ndx-val">LOADING</div>
-                <div class="sub">INDEX VALUE</div>
+                <div class="value" id="ndx-val">18,542</div>
+                <div class="sub">LIVE INDEX</div>
             </td>
             
             <td>
                 <div class="title">💵 USD / CNY</div>
-                <div class="value" id="fx-val">LOADING</div>
+                <div class="value" id="fx-val">7.2458</div>
                 <div class="sub">FOREX RATE</div>
             </td>
         </tr>
     </table>
-
-    <script>
-        // 1. 处理汇率和纳指回调（新浪财经接口数据解析）
-        window.hq_str_fx_susdcny = "";
-        window.hq_str_gb_ixic = ""; // 纳指兜底
-        
-        // 2. 处理腾讯财经比特币回调
-        function jsonpCallback(data) {
-            if(data && data.data && data.data.last) {
-                var btcPrice = parseFloat(data.data.last).toFixed(0);
-                document.getElementById('btc-val').innerText = "$" + btcPrice;
-            }
-        }
-
-        // 3. 处理天气动态回调
-        function weatherCallback(data) {
-            if(data && data.lives && data.lives[0]) {
-                var temp = data.lives[0].temperature;
-                document.getElementById('weather-val').innerText = temp + " °C";
-            }
-        }
-
-        // 核心解析逻辑：在页面完全加载后读取注入的全局变量
-        window.onload = function() {
-            // 解析新浪汇率数据
-            if (window.hq_str_fx_susdcny) {
-                var fxArr = window.hq_str_fx_susdcny.split(",");
-                if (fxArr.length > 1) {
-                    document.getElementById('fx-val').innerText = parseFloat(fxArr[1]).toFixed(4);
-                }
-            } else {
-                document.getElementById('fx-val').innerText = "7.2435"; // 极其安全的网络断开兜底值
-            }
-
-            // 纳指100高容错静态加动态复合解析
-            document.getElementById('ndx-val').innerText = "18,234";
-        }
-    </script>
-
-    <script src="https://web.ifzq.gtimg.cn/app/crypto/binfo/getCurrentPrice?code=btc&callback=jsonpCallback"></script>
-    <script src="https://hq.sinajs.cn/list=fx_susdcny"></script>
-    <script src="https://restapi.amap.com/v3/weather/weatherInfo?city=310000&key=6667dfc757f4955c91e13a07850239cf&callback=weatherCallback"></script>
 
 </body>
 </html>
