@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle FullScreen Dashboard</title>
-    <meta http-equiv="refresh" content="600"> <style>
+    <title>Kindle FullScreen Dashboard Borderless</title>
+    <meta http-equiv="refresh" content="600"> <!-- 10分钟整页强刷清除墨水屏残影 -->
+    <style>
         /* 彻底清除全屏自带的白边 */
         * {
             box-sizing: border-box;
@@ -28,39 +29,41 @@
             justify-content: space-between;
             align-items: stretch;
             border-bottom: 2px solid #000000;
-            height: 18%;
+            height: 22%; /* 稍微拉高高度以容纳包含最高最低温的天气预报 */
             width: 100%;
+            overflow: hidden; /* 裁剪掉挤出屏幕的白边 */
         }
         
-        /* 左上角天气：宽度对半，死贴左边 */
+        /* 左上角天气盒：通过负边距把图片自带的左侧白边吃掉 */
         .weather-box { 
-            width: 50%;
+            width: 52%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-start;
             overflow: hidden;
+            margin-left: -25px; /* 核心黑魔法：把左边多余的白边拖出屏幕外 */
+            margin-top: -5px;
         }
         .weather-img {
-            height: 100%;
-            width: 100%;
-            object-fit: contain; /* 保持比例完美铺满左侧 */
-            object-position: left center; /* 强行靠左对齐，不留空隙 */
+            height: 125%; /* 放大图片，挤掉上下白边 */
+            object-fit: contain; 
             filter: grayscale(100%) contrast(140%); /* 墨水屏专用高对比黑白 */
         }
         
-        /* 右上角纳指：宽度对半，死贴右边 */
+        /* 右上角纳指盒：利用拉伸和负边距把TradingView的边框空隙强行挤走 */
         .nasdaq-box { 
-            width: 50%;
+            width: 48%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-end;
             overflow: hidden;
+            margin-right: -15px; /* 核心黑魔法：把右边自带的空隙拖出屏幕外 */
         }
         .nasdaq-iframe {
-            width: 100%;
-            height: 110%; /* 稍微拉伸，挤掉TradingView自带的边框空隙 */
+            width: 115%; /* 强行拉宽小部件，使其填满右侧 */
+            height: 100%;
             border: none;
             filter: grayscale(100%) contrast(150%);
         }
@@ -117,16 +120,20 @@
 </head>
 <body>
 
+    <!-- 顶部数据面板（纯无缝拉伸流） -->
     <div class="header-section">
+        <!-- 左上角：上海天气（参数换成1，强制解锁今日天气预报，显示最高温/最低温和中文摄氏度） -->
         <div class="weather-box">
-            <img class="weather-img" src="https://wttr.in/Shanghai_0pq_lang=zh-cn.png" alt="Weather">
+            <img class="weather-img" src="https://wttr.in/Shanghai_1pq_lang=zh-cn.png" alt="Weather">
         </div>
         
+        <!-- 右上角：纳斯达克指数纯数字实时报价（通过CSS拉伸死贴右边缘） -->
         <div class="nasdaq-box">
             <iframe class="nasdaq-iframe" src="https://s.tradingview.com/embed-widget/single-quote/?symbol=CAPITALCOM%3AUS100&theme=light&locale=zh_CN"></iframe>
         </div>
     </div>
 
+    <!-- 中部：BTC 周期触控板 -->
     <div class="nav-section">
         <div class="btn-title">🪙 BTC / USDT 周期切换:</div>
         <div class="btn-group">
@@ -138,6 +145,7 @@
         </div>
     </div>
 
+    <!-- 底部：BTC 专属 K 线主图 -->
     <div class="chart-section">
         <iframe id="btc-kline-iframe" src=""></iframe>
     </div>
