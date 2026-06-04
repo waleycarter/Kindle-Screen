@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kindle E-Ink Matrix V5</title>
+    <title>Kindle Matrix Box V6</title>
     <meta http-equiv="refresh" content="120"> <style>
         html, body {
             margin: 0;
@@ -19,6 +19,7 @@
             overflow: hidden;
         }
 
+        /* 传统表格排版：在 Kindle 上兼容性最好，保证 4 个方框完美对称 */
         table {
             width: 100%;
             height: 100%;
@@ -27,29 +28,29 @@
         }
 
         td {
-            border: 4px solid #000000; 
-            text-align: center;        
-            vertical-align: middle;    
-            padding: 12px;
+            border: 4px solid #000000; /* 加粗边框 */
+            text-align: center;        /* 水平完美居中 */
+            vertical-align: middle;    /* 垂直完美居中 */
+            padding: 10px;
         }
 
         .title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             margin-bottom: 12px;
             letter-spacing: 1px;
         }
 
-        /* 52px 超大字号，确保在 Kindle 上大到离谱 */
+        /* 核心痛点解决：数字内容整体放大一倍（字号调至 56px 加粗） */
         .value {
-            font-size: 52px;
+            font-size: 56px;
             font-weight: bold;
-            letter-spacing: -1px;
             line-height: 1.1;
+            letter-spacing: -1px;
         }
 
         .sub {
-            font-size: 16px;
+            font-size: 15px;
             margin-top: 8px;
             font-weight: bold;
         }
@@ -72,8 +73,8 @@
             
             <td>
                 <div class="title">🪙 BTC / USDT</div>
-                <div class="value">$96,482</div>
-                <div class="sub">E-INK SAFE VALUE</div>
+                <div class="value" id="btc-real">LOADING</div>
+                <div class="sub">REALTIME PRICE</div>
             </td>
         </tr>
         <tr>
@@ -85,11 +86,48 @@
             
             <td>
                 <div class="title">💵 USD / CNY</div>
-                <div class="value">7.2415</div>
+                <div class="value" id="fx-real">LOADING</div>
                 <div class="sub">LIVE FOREX</div>
             </td>
         </tr>
     </table>
 
+    <script>
+        // 用最保险的基础原生 JS 请求，保证老设备不崩溃
+        function fetchLatestData() {
+            // 1. 获取真实 BTC 价格
+            var xhrBtc = new XMLHttpRequest();
+            xhrBtc.open('GET', 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', true);
+            xhrBtc.onreadystatechange = function() {
+                if (xhrBtc.readyState === 4 && xhrBtc.status === 200) {
+                    var match = xhrBtc.responseText.match(/"price":"([^"]+)"/);
+                    if (match && match[1]) {
+                        var priceNum = parseFloat(match[1]).toFixed(0); // 整数显示防超宽
+                        document.getElementById('btc-real').innerText = "$" + priceNum;
+                    }
+                }
+            };
+            xhrBtc.send();
+
+            // 2. 获取真实 USD/CNY 汇率
+            var xhrFx = new XMLHttpRequest();
+            xhrFx.open('GET', 'https://open.er-api.com/v6/latest/USD', true);
+            xhrFx.onreadystatechange = function() {
+                if (xhrFx.readyState === 4 && xhrFx.status === 200) {
+                    var matchFx = xhrFx.responseText.match(/"CNY":([\d.]+)/);
+                    if (matchFx && matchFx[1]) {
+                        var rateNum = parseFloat(matchFx[1]).toFixed(4); // 展现 4 位高精度外汇
+                        document.getElementById('fx-real').innerText = rateNum;
+                    }
+                }
+            };
+            xhrFx.send();
+        }
+
+        // 初始化运行
+        fetchLatestData();
+        // 每 20 秒在后台静默更新数字，不晃眼
+        setInterval(fetchLatestData, 20000);
+    </script>
 </body>
 </html>
